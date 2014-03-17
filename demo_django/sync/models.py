@@ -3,7 +3,7 @@ from users.models import User
 
 # Create your models here.
 class File(models.Model):
-  path = models.CharField(max_length=20)
+  path = models.CharField(max_length=256)
   last_modified = models.DateTimeField()
   data = models.BinaryField()
   owner = models.ForeignKey('users.User')
