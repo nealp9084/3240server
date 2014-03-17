@@ -15,26 +15,27 @@ class File(models.Model):
     """
     Determines whether a particular file needs to be synced using the timestamp
     value from the user's file.
+    Returns 0, 1, or 2, depending on what kind of sync is needed.
     """
     if self.last_modified < user_timestamp:
       # The file on the user's filesystem is newer than the one stored online
       # must sync: replace the file on the server
-      return True
+      return 1
     elif self.last_modified == user_timestamp:
       # The file on the user's filesystem has the same timestamp as the one
       # stored online
       # do not sync
-      return False
+      return 0
     else:
       # The file on the user's filesystem is older than the one stored online
       # must sync: replace the file on the user's filesystem
-      return True
+      return 2
 
   def sync(self, user_timestamp, user_data):
     """
     Updates the contents of a particular file on the server.
     """
-    assert self.is_sync_needed(user_timestamp)
+    assert self.is_sync_needed(user_timestamp) != 0
 
     self.last_modified = user_timestamp
     self.data = user_data
