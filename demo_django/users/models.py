@@ -1,4 +1,5 @@
 from django.db import models
+from copy import deepcopy
 
 # Create your models here.
 class User(models.Model):
@@ -9,3 +10,11 @@ class User(models.Model):
 
   def __unicode__(self):
     return "[id=%d] %s" % (self.id, self.name)
+
+  def to_dict(self):
+    result = {}
+    result['name'] = deepcopy(self.name)
+    result['password'] = deepcopy(self.password)
+    result['is_admin'] = deepcopy(self.is_admin)
+    result['last_activity'] = deepcopy(str(self.last_activity))
+    return result
