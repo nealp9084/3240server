@@ -22,7 +22,7 @@ def create_server_file(request):
     param_server_path = request.POST['server_path']
     param_owner = request.POST['owner']
     
-    f = File(local_path=param_local_path,last_modified=param_last_modified, \
+    f = File(local_path=param_local_path,last_modified=param_last_modified,
       server_path=param_server_path,owner=param_owner)
     f.save()
     
@@ -44,17 +44,17 @@ def update_file(request, file_id):
     t = file.is_sync_needed(param_last_modified)
     
     # Conditions based off of sync code.
-    if(t == 0):
-      json_data = json.dumps({'success': False, 'file_id': f.id, 'code' : t})
+    if t == 0:
+      json_data = json.dumps({'success': False, 'file_id': file.id, 'code' : t})
       return HttpResponse(json_data) 
     else:
       param_local_path = request.POST['local_path']
       param_server_path = request.POST['server_path']
       param_owner = request.POST['owner']
-      if(t == 1):
+      if t == 1:
         # Replace file on server side.
         
-          f = File(local_path=param_local_path,last_modified=param_last_modified, \
+        f = File(local_path=param_local_path,last_modified=param_last_modified,
           server_path=param_server_path,owner=param_owner)
         f.save()     
         json_data = json.dumps({'success': True, 'file_id': f.id, 'code' : t})
@@ -62,16 +62,17 @@ def update_file(request, file_id):
       else: # t == 2
         # Replace file on client side.
 
-        f = File(local_path=param_local_path,last_modified=param_last_modified, \
+        f = File(local_path=param_local_path,last_modified=param_last_modified,
           server_path=param_server_path,owner=param_owner)
         f.save() 
-        json_data = json.dumps({'success': True, 'file_id': f.id, 'code' : t})
-        return HttpResponse(json_data) 
+        json_data = json.dumps({'success': True, 'file_id': file.id, 'code' : t})
+        return HttpResponse(json_data)
 
 def serve_file(request, file_id):
   # Serves the file to the client.
   if request.method == 'GET':
     # If file exists: get_object_or_404()
     #   Send
-  else
+    1
+  else:
     return HttpResponseNotAllowed(['GET'])

@@ -18,7 +18,7 @@ def index(request):
 def detail(request, user_id):
   if request.method == 'GET':
     user = get_object_or_404(User, id=user_id)
-    json_data = json.dumps(user)
+    json_data = json.dumps(user.to_dict())
     return HttpResponse(json_data)
   else:
     return HttpResponseNotAllowed(['GET'])
