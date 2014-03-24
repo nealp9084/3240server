@@ -3,13 +3,21 @@ from users.models import User
 
 # Create your models here.
 class File(models.Model):
-  path = models.CharField(max_length=256)
+  local_path = models.CharField(max_length=256)
   last_modified = models.DateTimeField()
-  data = models.BinaryField()
+  server_path = models.CharField(max_length=256)
   owner = models.ForeignKey('users.User')
 
   def __unicode__(self):
     return "[id=%d] %s's %s" % (self.id, self.owner.name, self.path)
+
+  def to_dict(self):
+    result = {}
+    result['local_path'] = deepcopy(self.local_path)
+    result['last_modified'] = deepcopy(self.last_modified)
+    result['server_path'] = deepcopy(self.server_path)
+    result['owner'] = deepcopy(self.owner)
+    return result
 
   def is_sync_needed(self, user_timestamp):
     """
