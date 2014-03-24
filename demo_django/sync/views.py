@@ -14,6 +14,7 @@ def index(request):
   else:
     return HttpResponseNotAllowed(['GET'])
 
+@csrf_exempt
 def create_server_file(request):
   # Put something in the db.
   if request.method == 'POST':
@@ -36,6 +37,7 @@ def create_server_file(request):
   else:
     return HttpResponseNotAllowed(['POST'])
 
+@csrf_exempt
 def update_file(request, file_id):
   # Updates the file on the server.
   if request.method == 'POST':
@@ -67,6 +69,8 @@ def update_file(request, file_id):
         f.save() 
         json_data = json.dumps({'success': True, 'file_id': file.id, 'code' : t})
         return HttpResponse(json_data)
+  else:
+    return HttpResponseNotAllowed(['POST'])
 
 def serve_file(request, file_id):
   # Serves the file to the client.
