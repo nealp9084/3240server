@@ -1,11 +1,12 @@
 from django.db import models
 from users.models import User
+from copy import deepcopy
 
 # Create your models here.
 class File(models.Model):
   local_path = models.CharField(max_length=256)
   last_modified = models.DateTimeField()
-  server_path = models.CharField(max_length=256)
+  server_path = models.CharField(max_length=256) # Hash of time-stamp
   owner = models.ForeignKey('users.User')
 
   def __unicode__(self):
