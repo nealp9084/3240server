@@ -6,7 +6,7 @@ from copy import deepcopy
 class File(models.Model):
   local_path = models.CharField(max_length=256)
   last_modified = models.DateTimeField()
-  server_path = models.CharField(max_length=256) # Hash of time-stamp
+  file_data = models.BinaryField()
   owner = models.ForeignKey('users.User')
 
   def __unicode__(self):
@@ -16,7 +16,7 @@ class File(models.Model):
     result = {}
     result['local_path'] = deepcopy(self.local_path)
     result['last_modified'] = deepcopy(self.last_modified)
-    result['server_path'] = deepcopy(self.server_path)
+    result['file_data'] = deepcopy(self.file_data)
     result['owner'] = deepcopy(self.owner)
     return result
 
@@ -47,4 +47,4 @@ class File(models.Model):
     assert self.is_sync_needed(user_timestamp) != 0
 
     self.last_modified = user_timestamp
-    self.data = user_data
+    self.file_data = user_data

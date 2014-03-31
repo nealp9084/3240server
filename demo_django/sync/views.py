@@ -5,10 +5,13 @@ from django.utils import timezone
 import json
 
 from sync.models import File
+from users.models import User
 
 def index(request):
   if request.method == 'GET':
-    objs = [x.to_dict() for x in list(File.objects.all())]
+    # very unsecure, access token pls
+    current_user = request.GET['current_user']
+    objs = [x.to_dict() for x in list(File.objects.all().filter(owner=current_user))]
     json_data = json.dumps(objs)
     return HttpResponse(json_data)
   else:
@@ -18,17 +21,17 @@ def index(request):
 def create_server_file(request):
   # Put something in the db.
   if request.method == 'POST':
+    # very unsecure, access token pls
+    current_user = request.POST['current_user']
     param_local_path = request.POST['local_path']
     param_last_modified = request.POST['last_modified']
-    param_server_path = request.POST['server_path']
-    param_owner = request.POST['owner']
+    param_file_data = request.POST['file_data']
+    param_owner = current_user
     
     f = File(local_path=param_local_path,last_modified=param_last_modified,
-      server_path=param_server_path,owner=param_owner)
+      file_data=param_file_data,owner=param_owner)
     f.save()
-    
-    # If user directory doesn't exist:
-    #   Create User Directory
+
     # Move file from client to user directory on server.
     # File name should be timestamp
 
@@ -41,6 +44,7 @@ def create_server_file(request):
 def update_file(request, file_id):
   # Updates the file on the server.
   if request.method == 'POST':
+    current_user = request.POST['current_user']
     file = get_object_or_404(File, id=file_id)
     param_last_modified = request.POST['last_modified']
     t = file.is_sync_needed(param_last_modified)
@@ -51,23 +55,18 @@ def update_file(request, file_id):
       return HttpResponse(json_data) 
     else:
       param_local_path = request.POST['local_path']
-      param_server_path = request.POST['server_path']
+      param_file_data = request.POST['file_data']
       param_owner = request.POST['owner']
       if t == 1:
-        # Replace file on server side.
-        
-        f = File(local_path=param_local_path,last_modified=param_last_modified,
-          server_path=param_server_path,owner=param_owner)
-        f.save()     
-        json_data = json.dumps({'success': True, 'file_id': f.id, 'code' : t})
+        # Update file on server side.
+        file.file_data = param_file_data
+        file.last_modified = param_last_modified
+        file.save()
+        json_data = json.dumps({'success': True, 'file_id': file.id, 'code' : t})
         return HttpResponse(json_data)
       else: # t == 2
         # Replace file on client side.
-
-        f = File(local_path=param_local_path,last_modified=param_last_modified,
-          server_path=param_server_path,owner=param_owner)
-        f.save() 
-        json_data = json.dumps({'success': True, 'file_id': file.id, 'code' : t})
+        json_data = json.dumps({'success': True, 'file_id': file.id, 'code' : t, 'file_info' : {'file_data' : file.file_data, 'file_timestamp' : file.last_modified}})
         return HttpResponse(json_data)
   else:
     return HttpResponseNotAllowed(['POST'])
@@ -75,8 +74,15 @@ def update_file(request, file_id):
 def serve_file(request, file_id):
   # Serves the file to the client.
   if request.method == 'GET':
-    # If file exists: get_object_or_404()
-    #   Send
-    1
+    current_user = request.GET['current_user']
+    user_check = get_object_or_404(User, id=current_user)
+    file = get_object_or_404(File, id=file_id)
+    if user_check.is_admin or file.owner == user_check:
+      json_data = json.dumps({'success' : True, 'file_info' : {'file_data' : file.file_data, 'file_timestamp' : file.last_modified}})
+      return HttpResponse(json_data)
+    else:
+      return HttpResponseForbidden()
+      # json_data = json.dumps({'success': False, 'error': {'code': '200', 'message': 'You do not have access rights to this file.'}})
+      # return HttpResponse(json_data)
   else:
     return HttpResponseNotAllowed(['GET'])
