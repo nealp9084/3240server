@@ -39,6 +39,7 @@ def create(request):
     u = User(name=param_name, password=param_password,
              is_admin=False, last_activity=timezone.now())
     u.save()
+    # Create the key
 
     # indicate success
     json_data = json.dumps({'success': True})

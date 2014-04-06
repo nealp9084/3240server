@@ -10,7 +10,7 @@ class File(models.Model):
   owner = models.ForeignKey('users.User')
 
   def __unicode__(self):
-    return "[id=%d] %s's %s" % (self.id, self.owner.name, self.path)
+    return "[id=%d] %s's %s" % (self.id, self.owner.name, self.local_path)
 
   def to_dict(self):
     result = {}
