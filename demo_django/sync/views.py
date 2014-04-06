@@ -39,7 +39,7 @@ def create_server_file(request):
     # File name should be timestamp
 
     json_data = json.dumps({'success': True, 'file_id': f.id})
-    return HttpResponse(json_data)   
+    return HttpResponse(json_data)
   else:
     return HttpResponseNotAllowed(['POST'])
 
@@ -89,3 +89,22 @@ def serve_file(request, file_id):
       return HttpResponseForbidden()
   else:
     return HttpResponseNotAllowed(['GET'])
+
+@csrf_exempt
+def delete_file(request, file_id):
+  # Deletes the file from the server.
+  if request.method == 'DELETE':
+    current_user_id = request.GET['current_user']
+    file = get_object_or_404(File, id=file_id)
+    current_user = get_object_or_404(User, id=current_user_id)
+
+    if current_user.is_admin or file.owner == current_user:
+      file.delete()
+      current_user.last_activity = timezone.now()
+      current_user.save()
+      json_data = {'success': True}
+      return HttpResponse(json.dumps(json_data))
+    else:
+      return HttpResponseForbidden()
+  else:
+    return HttpResponseNotAllowed(['DELETE'])
