@@ -10,8 +10,14 @@ from users.models import User
 def index(request):
   if request.method == 'GET':
     # very unsecure, access token pls
-    current_user = request.GET['current_user']
-    objs = [x.to_dict() for x in list(File.objects.all().filter(owner=current_user))]
+    current_user_id = request.GET['current_user']
+    current_user = get_object_or_404(User, id=current_user_id)
+
+    if current_user.is_admin:
+      objs = [x.to_dict() for x in list(File.objects.all())]
+    else:
+      objs = [x.to_dict() for x in list(File.objects.all().filter(owner=current_user))]
+
     json_data = json.dumps(objs)
     return HttpResponse(json_data)
   else:
