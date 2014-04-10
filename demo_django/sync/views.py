@@ -23,13 +23,14 @@ def create_server_file(request):
   if request.method == 'POST':
     # very unsecure, access token pls
     current_user_id = request.POST['current_user']
-    current_user = get_object_or_404(User, id=current_user_id)
     param_local_path = request.POST['local_path']
     param_last_modified = request.POST['last_modified']
     param_file_data = request.POST['file_data']
+
+    current_user = get_object_or_404(User, id=current_user_id)
     
     f = File(local_path=param_local_path,last_modified=param_last_modified,
-      file_data=param_file_data,owner=current_user)
+      file_data=param_file_data,owner=current_user, size=len(param_file_data))
     f.save()
 
     current_user.last_activity = timezone.now()
@@ -61,6 +62,7 @@ def update_file(request, file_id):
       param_local_path = request.POST['local_path']
       param_file_data = request.POST['file_data']
       param_owner = request.POST['owner']
+
       if t == 1:
         # Update file on server side.
         file.sync(param_last_modified, param_file_data)

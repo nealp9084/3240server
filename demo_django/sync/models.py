@@ -8,6 +8,7 @@ class File(models.Model):
   last_modified = models.DateTimeField()
   file_data = models.BinaryField()
   owner = models.ForeignKey('users.User')
+  size = models.IntegerField()
 
   def __unicode__(self):
     return "[id=%d] %s's %s" % (self.id, self.owner.name, self.local_path)
@@ -16,8 +17,8 @@ class File(models.Model):
     result = {}
     result['local_path'] = deepcopy(self.local_path)
     result['last_modified'] = deepcopy(self.last_modified)
-    result['file_data'] = deepcopy(self.file_data)
     result['owner'] = deepcopy(self.owner)
+    result['size'] = deepcopy(self.size)
     return result
 
   def is_sync_needed(self, user_timestamp):
@@ -48,3 +49,4 @@ class File(models.Model):
 
     self.last_modified = user_timestamp
     self.file_data = user_data
+    self.size = len(user_data)
