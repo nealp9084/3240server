@@ -5,6 +5,7 @@ from django.utils import timezone
 import json
 
 from users.models import User
+from sync.models import File
 
 # Create your views here.
 def index(request):
@@ -50,9 +51,37 @@ def create(request):
 @csrf_exempt
 def delete(request, user_id):
   if request.method == 'DELETE':
+    current_user_id = request.GET['current_user']
     user = get_object_or_404(User, id=user_id)
-    user.delete()
-    json_data = json.dumps({'success': True})
-    return HttpResponse(json_data)
+    current_user = get_object_or_404(User, id=current_user_id)
+
+    if current_user.is_admin or user == current_user:
+      user.delete()
+      # optionally delete the user's files
+      if 'delete_files' in request.GET and request.GET['delete_files']:
+        File.objects.filter(owner=current_user).delete()
+
+      json_data = json.dumps({'success': True})
+      return HttpResponse(json_data)
+    else:
+      return HttpResponseForbidden()
   else:
     return HttpResponseNotAllowed(['DELETE'])
+
+@csrf_exempt
+def change_password(request, user_id):
+  if request.method == 'POST':
+    current_user_id = request.POST['current_user']
+    new_password = request.POST['new_password']
+    target_user = get_object_or_404(User, id=user_id)
+    current_user = get_object_or_404(User, id=current_user_id)
+
+    if current_user.is_admin or current_user == target_user:
+      target_user.password = new_password
+      target_user.save()
+      json_data = json.dumps({'success': True})
+      return HttpResponse(json_data)
+    else:
+      return HttpResponseForbidden()
+  else:
+    return HttpResponseNotAllowed(['POST'])
