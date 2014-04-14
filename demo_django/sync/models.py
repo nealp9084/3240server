@@ -101,8 +101,10 @@ class History(models.Model):
   @staticmethod
   def log_update(who_, what_):
     h = History(who=who_, what=what_, type='U', when=timezone.now())
+    h.save()
 
   @staticmethod
   def log_deletion(who_, what_):
     h = History(who=who_, what=what_, type='D', when=timezone.now())
+    h.save()
 
