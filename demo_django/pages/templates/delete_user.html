@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Delete my account</title>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#btn').click(function() {
+                var uid = $('#id').val();
+                var url = '';
+
+                if ($('#rm').is(':checked')) {
+                    url = '/users/' + uid + '/delete/?current_user=' + uid + '&delete_files=1';
+                } else {
+                    url = '/users/' + uid + '/delete/?current_user=' + uid;
+                }
+
+                $.ajax({
+                           type: 'DELETE',
+                           url: url,
+                           success: function() {
+                               $("#msg").text("Deleted the account!");
+                           }
+                       });
+            });
+        });
+    </script>
+</head>
+<body>
+    <div>
+        <input type="text" id="id" placeholder="user id" />
+        <label for="rm">Delete files too?</label>
+        <input type="checkbox" id="rm" name="rm" />
+        <input type="submit" id="btn" value="Delete account!" />
+    </div>
+    <div id="msg"></div>
+</body>
+</html>

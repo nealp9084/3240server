@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create an account</title>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#btn').click(function() {
+                data = {name: $('#nm').val(), password: $('#pw').val() };
+                $.post('/users/create/', data, function() {
+                   $("#msg").text("Created the user!");
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+    <div>
+        <input type="text" id="nm" placeholder="name" />
+        <input type="password" id="pw" placeholder="password" />
+        <input type="submit" id="btn" value="Create user!" />
+    </div>
+    <div id="msg"></div>
+</body>
+</html>

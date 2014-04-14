@@ -65,6 +65,7 @@ class File(models.Model):
     self.size = len(user_data)
     self.local_path = user_local_path
 
+# TODO: fix bug when deleting files (it deletes the history entry too!)
 class History(models.Model):
   # which user performed this transaction?
   who = models.ForeignKey('users.User')

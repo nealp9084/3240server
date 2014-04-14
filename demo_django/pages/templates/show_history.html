@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Show my transaction history</title>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#btn').click(function() {
+                $.get('/sync/show_history/?current_user=' + $('#id').val(), function(data) {
+                    var items = JSON.parse(data);
+                    for (var i = 0; i < items.length; i++) {
+                        var item = items[i];
+                        var row = '<tr>' +
+                                '<td>' + item.who_id + '</td>' +
+                                '<td>' + item.what_id + '</td>' +
+                                '<td>' + item.when + '</td>' +
+                                '<td>' + item.type + '</td>' +
+                                '</tr>';
+                        $('#tbd')[0].innerHTML += row;
+                    }
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+    <div>
+        <input type="text" id="id" placeholder="user id" />
+        <input type="submit" id="btn" value="Show history!" />
+    </div>
+    <table id="tbl" border="1">
+        <thead>
+            <tr>
+                <td>User Id</td>
+                <td>File Id</td>
+                <td>Timestamp</td>
+                <td>Transaction Type</td>
+            </tr>
+        </thead>
+        <tbody id="tbd">
+        </tbody>
+    </table>
+</body>
+</html>

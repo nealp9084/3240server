@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404
-from django.http import HttpResponse, HttpResponseNotAllowed, HttpResponseForbidden
+from django.http import HttpResponse, HttpResponseNotAllowed, HttpResponseForbidden, HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 import json
@@ -164,3 +164,19 @@ def delete_file(request, file_id):
       return HttpResponseForbidden()
   else:
     return HttpResponseNotAllowed(['DELETE'])
+
+def show_history(request):
+  if request.method == 'GET':
+    # very unsecure, access token pls
+    current_user_id = request.GET['current_user']
+    current_user = get_object_or_404(User, id=current_user_id)
+
+    if current_user.is_admin:
+      objs = [x.to_dict() for x in list(History.objects.all())]
+    else:
+      objs = [x.to_dict() for x in list(History.objects.all().filter(who=current_user))]
+
+    json_data = json.dumps(objs)
+    return HttpResponse(json_data)
+  else:
+    return HttpResponseNotAllowed(['GET'])
