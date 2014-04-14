@@ -32,18 +32,16 @@ def create(request):
 
     # check if a user exists with the given username
     if User.objects.filter(name=param_name):
-      error_data = {'code': '100', 'message': 'username is taken'}
+      error_data = {'code': 100, 'message': 'username is taken'}
       json_data = json.dumps({'success': False, 'error': error_data})
       return HttpResponse(json_data)
 
     # create and save a regular user
-    u = User(name=param_name, password=param_password,
-             is_admin=False, last_activity=timezone.now())
-    u.save()
-    # Create the key
+    user = User.create(param_name, param_password)
+    user.save()
 
     # indicate success
-    json_data = json.dumps({'success': True})
+    json_data = json.dumps({'success': True, 'user_id': user.id})
     return HttpResponse(json_data)
   else:
     return HttpResponseNotAllowed(['POST'])
@@ -52,11 +50,11 @@ def create(request):
 def delete(request, user_id):
   if request.method == 'DELETE':
     current_user_id = request.GET['current_user']
-    user = get_object_or_404(User, id=user_id)
+    target_user = get_object_or_404(User, id=user_id)
     current_user = get_object_or_404(User, id=current_user_id)
 
-    if current_user.is_admin or user == current_user:
-      user.delete()
+    if current_user.is_admin or current_user == target_user:
+      target_user.delete()
       # optionally delete the user's files
       if 'delete_files' in request.GET and request.GET['delete_files']:
         File.objects.filter(owner=current_user).delete()
@@ -73,6 +71,7 @@ def change_password(request, user_id):
   if request.method == 'POST':
     current_user_id = request.POST['current_user']
     new_password = request.POST['new_password']
+
     target_user = get_object_or_404(User, id=user_id)
     current_user = get_object_or_404(User, id=current_user_id)
 

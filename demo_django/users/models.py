@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 from copy import deepcopy
 
 # Create your models here.
@@ -7,14 +8,39 @@ class User(models.Model):
   password = models.CharField(max_length=100)
   is_admin = models.BooleanField()
   last_activity = models.DateTimeField()
+  bytes_transferred = models.IntegerField()
+
+  @staticmethod
+  def create(name, password):
+    """Factory method for creating a user with sane default values."""
+    return User(name=name, password=password,
+                is_admin=False,
+                last_activity=timezone.now(),
+                bytes_transferred=0)
+
 
   def __unicode__(self):
     return "[id=%d] %s" % (self.id, self.name)
 
   def to_dict(self):
+    """Helper method for serializing user objects."""
     result = {}
+    result['id'] = deepcopy(self.id)
     result['name'] = deepcopy(self.name)
     result['password'] = deepcopy(self.password)
     result['is_admin'] = deepcopy(self.is_admin)
-    result['last_activity'] = deepcopy(str(self.last_activity))
+    result['last_activity'] = str(self.last_activity)
+    result['bytes_transferred'] = deepcopy(self.bytes_transferred)
     return result
+
+  def touch(self):
+    """Updates the last_activity field on the current user (a la UNIX)."""
+    self.last_activity = timezone.now()
+
+  def save(self, *args, **kwargs):
+    """
+    This overrides the Django model save method.
+    It always updates the last_activity field before saving the user.
+    """
+    self.touch()
+    super(User, self).save(*args, **kwargs)
