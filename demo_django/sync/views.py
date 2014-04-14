@@ -45,6 +45,7 @@ def create_server_file(request):
     # is the timestamp valid?
     try:
       last_modified = dateutil.parser.parse(param_last_modified)
+      last_modified = timezone.make_aware(last_modified, timezone.get_current_timezone())
     except:
       return HttpResponseBadRequest()
 
@@ -88,6 +89,7 @@ def update_file(request, file_id):
     # is the timestamp valid?
     try:
       user_timestamp = dateutil.parser.parse(param_last_modified)
+      user_timestamp = timezone.make_aware(user_timestamp, timezone.get_current_timezone())
     except:
       return HttpResponseBadRequest()
 
