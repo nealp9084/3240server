@@ -14,6 +14,7 @@ def index(request):
   if request.method == 'GET':
     param_secret = request.GET['token']
 
+    # get the current user via the access token
     try:
       current_user_token = Token.objects.find(secret=param_secret)
       current_user = current_user_token.user
@@ -39,6 +40,7 @@ def create_server_file(request):
     param_last_modified = request.POST['last_modified']
     param_file_data = request.POST['file_data']
 
+    # get the current user via the access token
     try:
       current_user_token = Token.objects.find(secret=param_secret)
       current_user = current_user_token.user
@@ -82,6 +84,7 @@ def update_file(request, file_id):
 
     file = get_object_or_404(File, id=file_id)
 
+    # get the current user via the access token
     try:
       current_user_token = Token.objects.find(secret=param_secret)
       current_user = current_user_token.user
@@ -116,24 +119,23 @@ def update_file(request, file_id):
       error_data = {'code': 210, 'message': 'file is already up-to-date'}
       json_data = json.dumps({'success': False, 'error': error_data})
       return HttpResponse(json_data) 
-    else:
-      if sync_code == 1:
-        # Update file on server side.
-        file.sync(user_timestamp, param_file_data, param_local_path)
-        file.save()
+    elif sync_code == 1:
+      # Update file on server side.
+      file.sync(user_timestamp, param_file_data, param_local_path)
+      file.save()
 
-        current_user.bytes_transferred += file.size
-        current_user.save()
-        History.log_update(current_user, file)
+      current_user.bytes_transferred += file.size
+      current_user.save()
+      History.log_update(current_user, file)
 
-        json_data = json.dumps({'success': True})
-        return HttpResponse(json_data)
-      else:
-        # Replace file on client side.
-        error_data = {'code': 212,
-                      'message': 'the file you sent is older than the one on the server'}
-        json_data = json.dumps({'success': False, 'error': error_data})
-        return HttpResponse(json_data)
+      json_data = json.dumps({'success': True})
+      return HttpResponse(json_data)
+    else: # sync_code == 2
+      # Replace file on client side.
+      error_data = {'code': 212,
+                    'message': 'the file you sent is older than the one on the server'}
+      json_data = json.dumps({'success': False, 'error': error_data})
+      return HttpResponse(json_data)
   else:
     return HttpResponseNotAllowed(['POST'])
 
@@ -144,6 +146,7 @@ def serve_file(request, file_id):
 
     file = get_object_or_404(File, id=file_id)
 
+    # get the current user via the access token
     try:
       current_user_token = Token.objects.find(secret=param_secret)
       current_user = current_user_token.user
@@ -169,6 +172,7 @@ def delete_file(request, file_id):
 
     file = get_object_or_404(File, id=file_id)
 
+    # get the current user via the access token
     try:
       current_user_token = Token.objects.find(secret=param_secret)
       current_user = current_user_token.user
@@ -191,6 +195,7 @@ def show_history(request):
   if request.method == 'GET':
     param_secret = request.GET['token']
 
+    # get the current user via the access token
     try:
       current_user_token = Token.objects.find(secret=param_secret)
       current_user = current_user_token.user

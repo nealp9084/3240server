@@ -18,6 +18,7 @@ def index(request):
     return HttpResponseNotAllowed(['GET'])
 
 def detail(request, user_id):
+  # TODO: this leaks password
   if request.method == 'GET':
     user = get_object_or_404(User, id=user_id)
     json_data = json.dumps(user.to_dict())
@@ -37,7 +38,7 @@ def create(request):
       json_data = json.dumps({'success': False, 'error': error_data})
       return HttpResponse(json_data)
 
-    # create and save a regular user
+    # create and save a regular user, and also create the access token
     user = User.create(param_name, param_password)
     token = Token.create(user)
     token.save()
@@ -56,6 +57,7 @@ def delete(request, user_id):
 
     target_user = get_object_or_404(User, id=user_id)
 
+    # get the current user via the access token
     try:
       current_user_token = Token.objects.find(secret=param_secret)
       current_user = current_user_token.user
@@ -83,6 +85,7 @@ def change_password(request, user_id):
 
     target_user = get_object_or_404(User, id=user_id)
 
+    # get the current user via the access token
     try:
       current_user_token = Token.objects.find(secret=param_secret)
       current_user = current_user_token.user

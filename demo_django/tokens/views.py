@@ -1,9 +1,10 @@
 from django.http import HttpResponse, HttpResponseNotAllowed, HttpResponseForbidden
 from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ObjectDoesNotExist
+import json
+
 from users.models import User
 from tokens.models import Token
-import json
 
 # TODO: horribly unsecure
 def index(request):
