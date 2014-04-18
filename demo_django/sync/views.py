@@ -153,9 +153,8 @@ def delete_file(request, file_id):
     current_user = get_object_or_404(User, id=current_user_id)
 
     if current_user.is_admin or file.owner == current_user:
-      file.delete()
-
       History.log_deletion(current_user, file)
+      file.delete()
       current_user.save()
 
       json_data = json.dumps({'success': True})
