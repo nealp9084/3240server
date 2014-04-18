@@ -6,9 +6,11 @@ import json
 
 from users.models import User
 from sync.models import File
+from tokens.models import Token
 
 # Create your views here.
 def index(request):
+  # TODO: this leaks password
   if request.method == 'GET':
     objs = [x.to_dict() for x in list(User.objects.all())]
     json_data = json.dumps(objs)
@@ -38,10 +40,12 @@ def create(request):
 
     # create and save a regular user
     user = User.create(param_name, param_password)
+    token = Token.create(user)
+    token.save()
     user.save()
 
     # indicate success
-    json_data = json.dumps({'success': True, 'user_id': user.id})
+    json_data = json.dumps({'success': True, 'user_id': user.id, 'token' : token.secret})
     return HttpResponse(json_data)
   else:
     return HttpResponseNotAllowed(['POST'])
@@ -49,15 +53,14 @@ def create(request):
 @csrf_exempt
 def delete(request, user_id):
   if request.method == 'DELETE':
-    current_user_id = request.GET['current_user']
     target_user = get_object_or_404(User, id=user_id)
-    current_user = get_object_or_404(User, id=current_user_id)
+    current_user_token = get_object_or_404(Token, secret='')
+    current_user = current_user_token.user
 
     if current_user.is_admin or current_user == target_user:
       target_user.delete()
-      # optionally delete the user's files
-      if 'delete_files' in request.GET and request.GET['delete_files']:
-        File.objects.filter(owner=current_user).delete()
+      # Once an object is deleted in this manner, all objects with the former as a field are also automatically deleted.
+      # In this way, we know that the auth token is automatically removed.
 
       json_data = json.dumps({'success': True})
       return HttpResponse(json_data)
