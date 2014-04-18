@@ -7,12 +7,14 @@ import dateutil.parser
 
 from sync.models import File, History
 from users.models import User
+from tokens.models import Token
 
 def index(request):
   if request.method == 'GET':
-    # very unsecure, access token pls
-    current_user_id = request.GET['current_user']
-    current_user = get_object_or_404(User, id=current_user_id)
+    param_secret = request.GET['token']
+
+    current_user_token = get_object_or_404(Token, secret=param_secret)
+    current_user = current_user_token.user
 
     if current_user.is_admin:
       objs = [x.to_dict() for x in list(File.objects.all())]
@@ -28,13 +30,13 @@ def index(request):
 def create_server_file(request):
   # Put something in the db.
   if request.method == 'POST':
-    # very unsecure, access token pls
-    current_user_id = request.POST['current_user']
+    param_secret = request.POST['token']
     param_local_path = request.POST['local_path']
     param_last_modified = request.POST['last_modified']
     param_file_data = request.POST['file_data']
 
-    current_user = get_object_or_404(User, id=current_user_id)
+    current_user_token = get_object_or_404(Token, secret=param_secret)
+    current_user = current_user_token.user
 
     # check if the file already exists
     if File.objects.filter(owner=current_user, local_path=param_local_path):
@@ -50,8 +52,7 @@ def create_server_file(request):
       return HttpResponseBadRequest()
 
     # create and save the file record to the database
-    file = File.create(param_local_path, last_modified, param_file_data,
-                       current_user)
+    file = File.create(param_local_path, last_modified, param_file_data, current_user)
     file.save()
 
     # update metadata and log this transaction
@@ -68,13 +69,13 @@ def create_server_file(request):
 def update_file(request, file_id):
   # Updates the file on the server.
   if request.method == 'POST':
-    param_current_user_id = request.POST['current_user']
+    param_secret = request.POST['token']
     param_last_modified = request.POST['last_modified']
-    # param_local_path = request.POST['local_path']
     param_file_data = request.POST['file_data']
 
+    current_user_token = get_object_or_404(Token, secret=param_secret)
+    current_user = current_user_token.user
     file = get_object_or_404(File, id=file_id)
-    current_user = get_object_or_404(User, id=param_current_user_id)
 
     # workaround for possibly-faulty client code
     if 'local_path' in request.POST:
@@ -128,9 +129,11 @@ def update_file(request, file_id):
 def serve_file(request, file_id):
   # Serves the file to the client.
   if request.method == 'GET':
-    current_user_id = request.GET['current_user']
+    param_secret = request.GET['token']
+
+    current_user_token = get_object_or_404(Token, secret=param_secret)
+    current_user = current_user_token.user
     file = get_object_or_404(File, id=file_id)
-    current_user = get_object_or_404(User, id=current_user_id)
 
     if current_user.is_admin or file.owner == current_user:
       current_user.bytes_transferred += file.size
@@ -147,10 +150,11 @@ def serve_file(request, file_id):
 def delete_file(request, file_id):
   # Deletes the file from the server.
   if request.method == 'DELETE':
-    current_user_id = request.GET['current_user']
+    param_secret = request.GET['token']
 
+    current_user_token = get_object_or_404(Token, secret=param_secret)
+    current_user = current_user_token.user
     file = get_object_or_404(File, id=file_id)
-    current_user = get_object_or_404(User, id=current_user_id)
 
     if current_user.is_admin or file.owner == current_user:
       History.log_deletion(current_user, file)
@@ -166,9 +170,10 @@ def delete_file(request, file_id):
 
 def show_history(request):
   if request.method == 'GET':
-    # very unsecure, access token pls
-    current_user_id = request.GET['current_user']
-    current_user = get_object_or_404(User, id=current_user_id)
+    param_secret = request.GET['token']
+
+    current_user_token = get_object_or_404(Token, secret=param_secret)
+    current_user = current_user_token.user
 
     if current_user.is_admin:
       objs = [x.to_dict() for x in list(History.objects.all())]

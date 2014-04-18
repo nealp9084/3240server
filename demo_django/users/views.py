@@ -53,8 +53,10 @@ def create(request):
 @csrf_exempt
 def delete(request, user_id):
   if request.method == 'DELETE':
+    param_secret = request.GET['token']
+
     target_user = get_object_or_404(User, id=user_id)
-    current_user_token = get_object_or_404(Token, secret='')
+    current_user_token = get_object_or_404(Token, secret=param_secret)
     current_user = current_user_token.user
 
     if current_user.is_admin or current_user == target_user:
@@ -72,11 +74,12 @@ def delete(request, user_id):
 @csrf_exempt
 def change_password(request, user_id):
   if request.method == 'POST':
-    current_user_id = request.POST['current_user']
+    param_secret = request.POST['token']
     new_password = request.POST['new_password']
 
     target_user = get_object_or_404(User, id=user_id)
-    current_user = get_object_or_404(User, id=current_user_id)
+    current_user_token = get_object_or_404(Token, secret=param_secret)
+    current_user = current_user_token.user
 
     if current_user.is_admin or current_user == target_user:
       target_user.password = new_password
