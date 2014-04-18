@@ -2,6 +2,7 @@ from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse, HttpResponseNotAllowed, HttpResponseForbidden, HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
+from django.core.exceptions import ObjectDoesNotExist
 import json
 import dateutil.parser
 
@@ -13,8 +14,11 @@ def index(request):
   if request.method == 'GET':
     param_secret = request.GET['token']
 
-    current_user_token = get_object_or_404(Token, secret=param_secret)
-    current_user = current_user_token.user
+    try:
+      current_user_token = Token.objects.find(secret=param_secret)
+      current_user = current_user_token.user
+    except ObjectDoesNotExist:
+      return HttpResponseForbidden()
 
     if current_user.is_admin:
       objs = [x.to_dict() for x in list(File.objects.all())]
@@ -35,8 +39,11 @@ def create_server_file(request):
     param_last_modified = request.POST['last_modified']
     param_file_data = request.POST['file_data']
 
-    current_user_token = get_object_or_404(Token, secret=param_secret)
-    current_user = current_user_token.user
+    try:
+      current_user_token = Token.objects.find(secret=param_secret)
+      current_user = current_user_token.user
+    except ObjectDoesNotExist:
+      return HttpResponseForbidden()
 
     # check if the file already exists
     if File.objects.filter(owner=current_user, local_path=param_local_path):
@@ -73,9 +80,13 @@ def update_file(request, file_id):
     param_last_modified = request.POST['last_modified']
     param_file_data = request.POST['file_data']
 
-    current_user_token = get_object_or_404(Token, secret=param_secret)
-    current_user = current_user_token.user
     file = get_object_or_404(File, id=file_id)
+
+    try:
+      current_user_token = Token.objects.find(secret=param_secret)
+      current_user = current_user_token.user
+    except ObjectDoesNotExist:
+      return HttpResponseForbidden()
 
     # workaround for possibly-faulty client code
     if 'local_path' in request.POST:
@@ -131,9 +142,13 @@ def serve_file(request, file_id):
   if request.method == 'GET':
     param_secret = request.GET['token']
 
-    current_user_token = get_object_or_404(Token, secret=param_secret)
-    current_user = current_user_token.user
     file = get_object_or_404(File, id=file_id)
+
+    try:
+      current_user_token = Token.objects.find(secret=param_secret)
+      current_user = current_user_token.user
+    except ObjectDoesNotExist:
+      return HttpResponseForbidden()
 
     if current_user.is_admin or file.owner == current_user:
       current_user.bytes_transferred += file.size
@@ -152,9 +167,13 @@ def delete_file(request, file_id):
   if request.method == 'DELETE':
     param_secret = request.GET['token']
 
-    current_user_token = get_object_or_404(Token, secret=param_secret)
-    current_user = current_user_token.user
     file = get_object_or_404(File, id=file_id)
+
+    try:
+      current_user_token = Token.objects.find(secret=param_secret)
+      current_user = current_user_token.user
+    except ObjectDoesNotExist:
+      return HttpResponseForbidden()
 
     if current_user.is_admin or file.owner == current_user:
       History.log_deletion(current_user, file)
@@ -172,8 +191,11 @@ def show_history(request):
   if request.method == 'GET':
     param_secret = request.GET['token']
 
-    current_user_token = get_object_or_404(Token, secret=param_secret)
-    current_user = current_user_token.user
+    try:
+      current_user_token = Token.objects.find(secret=param_secret)
+      current_user = current_user_token.user
+    except ObjectDoesNotExist:
+      return HttpResponseForbidden()
 
     if current_user.is_admin:
       objs = [x.to_dict() for x in list(History.objects.all())]

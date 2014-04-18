@@ -25,7 +25,8 @@ class Token(models.Model):
   def create(user_obj):
     seed = time.time()
     rng = random.SystemRandom(seed)
-    return Token(user=user_obj, secret = rng.randint(1, 1<<256))
+    number = rng.randint(1, 1 << 256)
+    return Token(user=user_obj, secret=number)
 
 # TODO: awesome feature - we can use tokens as a way of avoiding password exchanges
 # One of the implications is that if a user token is leaked, we can revoke it without ever having

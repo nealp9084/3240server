@@ -1,11 +1,10 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import get_object_or_404
 from django.http import HttpResponse, HttpResponseNotAllowed, HttpResponseForbidden
 from django.views.decorators.csrf import csrf_exempt
-from django.utils import timezone
+from django.core.exceptions import ObjectDoesNotExist
 import json
 
 from users.models import User
-from sync.models import File
 from tokens.models import Token
 
 # Create your views here.
@@ -56,12 +55,17 @@ def delete(request, user_id):
     param_secret = request.GET['token']
 
     target_user = get_object_or_404(User, id=user_id)
-    current_user_token = get_object_or_404(Token, secret=param_secret)
-    current_user = current_user_token.user
+
+    try:
+      current_user_token = Token.objects.find(secret=param_secret)
+      current_user = current_user_token.user
+    except ObjectDoesNotExist:
+      return HttpResponseForbidden()
 
     if current_user.is_admin or current_user == target_user:
       target_user.delete()
-      # Once an object is deleted in this manner, all objects with the former as a field are also automatically deleted.
+      # Once an object is deleted in this manner, all objects with the former as a field are also
+      # automatically deleted.
       # In this way, we know that the auth token is automatically removed.
 
       json_data = json.dumps({'success': True})
@@ -78,8 +82,12 @@ def change_password(request, user_id):
     new_password = request.POST['new_password']
 
     target_user = get_object_or_404(User, id=user_id)
-    current_user_token = get_object_or_404(Token, secret=param_secret)
-    current_user = current_user_token.user
+
+    try:
+      current_user_token = Token.objects.find(secret=param_secret)
+      current_user = current_user_token.user
+    except ObjectDoesNotExist:
+      return HttpResponseForbidden()
 
     if current_user.is_admin or current_user == target_user:
       target_user.password = new_password
