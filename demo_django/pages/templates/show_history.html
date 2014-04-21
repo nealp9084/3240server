@@ -5,8 +5,17 @@
     <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
     <script>
         $(document).ready(function() {
+            $('#login_btn').click(function() {
+                data = { name: $('#login_un').val(), password: $('#login_pw').val() };
+                $.post('/tokens/login/', data, function(json_response) {
+                    response = JSON.parse(json_response);
+                    window.token = response.token;
+                    $('#btn').attr('disabled', false);
+                });
+            });
             $('#btn').click(function() {
-                $.get('/sync/show_history/?current_user=' + $('#id').val(), function(data) {
+                $('#tbd')[0].innerHTML = '';
+                $.get('/sync/show_history/?token=' + window.token, function(data) {
                     var items = JSON.parse(data);
                     for (var i = 0; i < items.length; i++) {
                         var item = items[i];
@@ -24,9 +33,15 @@
     </script>
 </head>
 <body>
+    <!-- login thing for grabbing the token -->
+    <div>
+        <input type="text" id="login_un" placeholder="username"/>
+        <input type="password" id="login_pw" placeholder="password"/>
+        <input type="submit" id="login_btn" value="Login first"/>
+    </div>
     <div>
         <input type="text" id="id" placeholder="user id" />
-        <input type="submit" id="btn" value="Show history!" />
+        <input type="submit" id="btn" value="Show history!" disabled />
     </div>
     <table id="tbl" border="1">
         <thead>

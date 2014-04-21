@@ -7,8 +7,9 @@
         $(document).ready(function() {
             $('#btn').click(function() {
                 data = {name: $('#nm').val(), password: $('#pw').val() };
+                $('#msg').text('');
                 $.post('/users/create/', data, function() {
-                   $("#msg").text("Created the user!");
+                   $('#msg').text('Created the user!');
                 });
             });
         });

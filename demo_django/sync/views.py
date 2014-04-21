@@ -2,7 +2,6 @@ from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse, HttpResponseNotAllowed, HttpResponseForbidden, HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
-from django.core.exceptions import ObjectDoesNotExist
 import json
 import dateutil.parser
 
@@ -15,10 +14,8 @@ def index(request):
     param_secret = request.GET['token']
 
     # get the current user via the access token
-    try:
-      current_user_token = Token.objects.find(secret=param_secret)
-      current_user = current_user_token.user
-    except ObjectDoesNotExist:
+    current_user = Token.get_current_user(param_secret)
+    if not current_user:
       return HttpResponseForbidden()
 
     if current_user.is_admin:
@@ -41,10 +38,8 @@ def create_server_file(request):
     param_file_data = request.POST['file_data']
 
     # get the current user via the access token
-    try:
-      current_user_token = Token.objects.find(secret=param_secret)
-      current_user = current_user_token.user
-    except ObjectDoesNotExist:
+    current_user = Token.get_current_user(param_secret)
+    if not current_user:
       return HttpResponseForbidden()
 
     # check if the file already exists
@@ -85,10 +80,8 @@ def update_file(request, file_id):
     file = get_object_or_404(File, id=file_id)
 
     # get the current user via the access token
-    try:
-      current_user_token = Token.objects.find(secret=param_secret)
-      current_user = current_user_token.user
-    except ObjectDoesNotExist:
+    current_user = Token.get_current_user(param_secret)
+    if not current_user:
       return HttpResponseForbidden()
 
     # workaround for possibly-faulty client code
@@ -147,10 +140,8 @@ def serve_file(request, file_id):
     file = get_object_or_404(File, id=file_id)
 
     # get the current user via the access token
-    try:
-      current_user_token = Token.objects.find(secret=param_secret)
-      current_user = current_user_token.user
-    except ObjectDoesNotExist:
+    current_user = Token.get_current_user(param_secret)
+    if not current_user:
       return HttpResponseForbidden()
 
     if current_user.is_admin or file.owner == current_user:
@@ -173,10 +164,8 @@ def delete_file(request, file_id):
     file = get_object_or_404(File, id=file_id)
 
     # get the current user via the access token
-    try:
-      current_user_token = Token.objects.find(secret=param_secret)
-      current_user = current_user_token.user
-    except ObjectDoesNotExist:
+    current_user = Token.get_current_user(param_secret)
+    if not current_user:
       return HttpResponseForbidden()
 
     if current_user.is_admin or file.owner == current_user:
@@ -196,10 +185,8 @@ def show_history(request):
     param_secret = request.GET['token']
 
     # get the current user via the access token
-    try:
-      current_user_token = Token.objects.find(secret=param_secret)
-      current_user = current_user_token.user
-    except ObjectDoesNotExist:
+    current_user = Token.get_current_user(param_secret)
+    if not current_user:
       return HttpResponseForbidden()
 
     if current_user.is_admin:

@@ -4,8 +4,14 @@ from copy import deepcopy
 
 from users.models import User
 
-# Create your models here.
 class File(models.Model):
+  """
+  This class represents files that are being tracked by OneDir.
+
+  Files belong to an individual user, are identified by their relative paths, and are tracked by
+  their timestamps. Each file, along with its size and the metadata mentioned above, is stored as a
+  record in the database.
+  """
   local_path = models.CharField(max_length=256)
   last_modified = models.DateTimeField()
   file_data = models.BinaryField()

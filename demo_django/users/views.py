@@ -1,13 +1,11 @@
 from django.shortcuts import get_object_or_404
 from django.http import HttpResponse, HttpResponseNotAllowed, HttpResponseForbidden
 from django.views.decorators.csrf import csrf_exempt
-from django.core.exceptions import ObjectDoesNotExist
 import json
 
 from users.models import User
 from tokens.models import Token
 
-# Create your views here.
 def index(request):
   # TODO: this leaks password
   if request.method == 'GET':
@@ -40,9 +38,9 @@ def create(request):
 
     # create and save a regular user, and also create the access token
     user = User.create(param_name, param_password)
+    user.save()
     token = Token.create(user)
     token.save()
-    user.save()
 
     # indicate success
     json_data = json.dumps({'success': True, 'user_id': user.id, 'token' : token.secret})
@@ -58,10 +56,8 @@ def delete(request, user_id):
     target_user = get_object_or_404(User, id=user_id)
 
     # get the current user via the access token
-    try:
-      current_user_token = Token.objects.find(secret=param_secret)
-      current_user = current_user_token.user
-    except ObjectDoesNotExist:
+    current_user = Token.get_current_user(param_secret)
+    if not current_user:
       return HttpResponseForbidden()
 
     if current_user.is_admin or current_user == target_user:
@@ -86,10 +82,8 @@ def change_password(request, user_id):
     target_user = get_object_or_404(User, id=user_id)
 
     # get the current user via the access token
-    try:
-      current_user_token = Token.objects.find(secret=param_secret)
-      current_user = current_user_token.user
-    except ObjectDoesNotExist:
+    current_user = Token.get_current_user(param_secret)
+    if not current_user:
       return HttpResponseForbidden()
 
     if current_user.is_admin or current_user == target_user:
