@@ -7,19 +7,52 @@ from users.models import User
 from tokens.models import Token
 
 def index(request):
-  # TODO: this leaks password
   if request.method == 'GET':
-    objs = [x.to_dict() for x in list(User.objects.all())]
-    json_data = json.dumps(objs)
-    return HttpResponse(json_data)
+    param_secret = request.GET['token']
+
+    # get the current user via the access token
+    current_user = Token.get_current_user(param_secret)
+    if not current_user:
+      return HttpResponseForbidden()
+
+    if current_user.is_admin:
+      objs = [x.to_dict() for x in list(User.objects.all())]
+      json_data = json.dumps(objs)
+      return HttpResponse(json_data)
+    else:
+      return HttpResponseForbidden()
   else:
     return HttpResponseNotAllowed(['GET'])
 
 def detail(request, user_id):
-  # TODO: this leaks password
   if request.method == 'GET':
-    user = get_object_or_404(User, id=user_id)
-    json_data = json.dumps(user.to_dict())
+    param_secret = request.GET['token']
+
+    target_user = get_object_or_404(User, id=user_id)
+
+    # get the current user via the access token
+    current_user = Token.get_current_user(param_secret)
+    if not current_user:
+      return HttpResponseForbidden()
+
+    if current_user.is_admin or current_user == target_user:
+      json_data = json.dumps(target_user.to_dict())
+      return HttpResponse(json_data)
+    else:
+      return HttpResponseForbidden()
+  else:
+    return HttpResponseNotAllowed(['GET'])
+
+def me(request):
+  if request.method == 'GET':
+    param_secret = request.GET['token']
+
+    # get the current user via the access token
+    current_user = Token.get_current_user(param_secret)
+    if not current_user:
+      return HttpResponseForbidden()
+
+    json_data = json.dumps(current_user.to_dict())
     return HttpResponse(json_data)
   else:
     return HttpResponseNotAllowed(['GET'])

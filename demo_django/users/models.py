@@ -19,7 +19,10 @@ class User(models.Model):
 
   @staticmethod
   def create(name, password):
-    """Factory method for creating a user with sane default values."""
+    """
+    Factory method for creating a user with sane default values.
+    This method is designed in such a way that it is compatible with bcrypt.
+    """
     return User(name=name, password=password,
                 is_admin=False,
                 last_activity=timezone.now(),
@@ -27,6 +30,22 @@ class User(models.Model):
 
   def __unicode__(self):
     return "[id=%d] %s" % (self.id, self.name)
+
+  @staticmethod
+  def lookup(name, password):
+    """
+    Helper method for logging in. Returns a User object given the user's name and password.
+    This method is designed in such a way that it is compatible with bcrypt.
+    """
+    user = User.objects.filter(name=name).first()
+
+    if user:
+      if user.password == password:
+        return user
+      else:
+        return None
+    else:
+      return None
 
   def to_dict(self):
     """Helper method for serializing user objects."""

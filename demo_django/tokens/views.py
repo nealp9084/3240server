@@ -6,26 +6,33 @@ import json
 from users.models import User
 from tokens.models import Token
 
-# TODO: horribly unsecure
 def index(request):
   if request.method == 'GET':
-    objs = [x.to_dict() for x in list(Token.objects.all())]
-    json_data = json.dumps(objs)
-    return HttpResponse(json_data)
+    param_secret = request.GET['token']
+
+    # get the current user via the access token
+    current_user = Token.get_current_user(param_secret)
+    if not current_user:
+      return HttpResponseForbidden()
+
+    if current_user.is_admin:
+      objs = [x.to_dict() for x in list(Token.objects.all())]
+      json_data = json.dumps(objs)
+      return HttpResponse(json_data)
+    else:
+      return HttpResponseForbidden()
   else:
     return HttpResponseNotAllowed(['GET'])
 
-# TODO: what happens when you submit invalid creds?
-# DoesNotExist of ObjectDoesNotExist
 @csrf_exempt
 def login(request):
   if request.method == 'POST':
     param_name = request.POST['name']
     param_password = request.POST['password']
 
-    try:
-      user = User.objects.get(name=param_name, password=param_password)
-    except ObjectDoesNotExist:
+    # get the current user via the access token
+    user = User.lookup(param_name, param_password)
+    if not user:
       return HttpResponseForbidden()
 
     token = Token.create(user)
@@ -41,9 +48,8 @@ def logout(request):
   if request.method == 'POST':
     param_token = request.POST['token']
 
-    try:
-      token = Token.get(secret=param_token)
-    except ObjectDoesNotExist:
+    token = Token.objects.filter(secret=param_token).first()
+    if not token:
       return HttpResponseForbidden()
 
     token.delete()
