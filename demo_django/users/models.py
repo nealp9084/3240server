@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from copy import deepcopy
+import pbkdf2
 
 class User(models.Model):
   """
@@ -12,47 +13,59 @@ class User(models.Model):
   guess where those privileges come into play.
   """
   name = models.CharField(max_length=20)
-  password = models.CharField(max_length=100)
+  password_hash = models.CharField(max_length=64)
   is_admin = models.BooleanField()
   last_activity = models.DateTimeField()
   bytes_transferred = models.IntegerField()
 
   @staticmethod
+  def encrypt_password(password):
+    return pbkdf2.crypt(password)
+
+  @staticmethod
+  def compare_password(real_password_hash, alleged_password):
+    if real_password_hash == pbkdf2.crypt(alleged_password, real_password_hash):
+      return True
+    else:
+      return False
+
+  @staticmethod
   def create(name, password):
     """
     Factory method for creating a user with sane default values.
-    This method is designed in such a way that it is compatible with bcrypt.
+    This method is designed in such a way that it is compatible with PBKDF2.
     """
-    return User(name=name, password=password,
+    password_hash = User.encrypt_password(password)
+    return User(name=name, password_hash=password_hash,
                 is_admin=False,
                 last_activity=timezone.now(),
                 bytes_transferred=0)
-
-  def __unicode__(self):
-    return "[id=%d] %s" % (self.id, self.name)
 
   @staticmethod
   def lookup(name, password):
     """
     Helper method for logging in. Returns a User object given the user's name and password.
-    This method is designed in such a way that it is compatible with bcrypt.
+    This method is designed in such a way that it is compatible with PBKDF2.
     """
     user = User.objects.filter(name=name).first()
 
     if user:
-      if user.password == password:
+      if User.compare_password(user.password_hash, password):
         return user
       else:
         return None
     else:
       return None
 
+  def __unicode__(self):
+    return "[id=%d] %s" % (self.id, self.name)
+
   def to_dict(self):
     """Helper method for serializing user objects."""
     result = {}
     result['id'] = deepcopy(self.id)
     result['name'] = deepcopy(self.name)
-    # result['password'] = deepcopy(self.password)
+    # result['password_hash'] = deepcopy(self.password_hash)
     result['is_admin'] = deepcopy(self.is_admin)
     result['last_activity'] = str(self.last_activity)
     result['bytes_transferred'] = deepcopy(self.bytes_transferred)
@@ -69,3 +82,7 @@ class User(models.Model):
     """
     self.touch()
     super(User, self).save(*args, **kwargs)
+
+  def set_password(self, password):
+    """Sets the password_hash field to the PBKDF2 hash computed for the given password."""
+    self.password_hash = User.encrypt_password(password)

@@ -120,7 +120,7 @@ def change_password(request, user_id):
       return HttpResponseForbidden()
 
     if current_user.is_admin or current_user == target_user:
-      target_user.password = new_password
+      target_user.set_password(new_password)
       target_user.save()
       json_data = json.dumps({'success': True})
       return HttpResponse(json_data)
