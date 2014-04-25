@@ -37,6 +37,7 @@ def create_server_file(request):
     param_last_modified = request.POST['last_modified']
     param_file_data = request.POST['file_data']
 
+    print len(param_file_data
     # get the current user via the access token
     current_user = Token.get_current_user(param_secret)
     if not current_user:
@@ -56,9 +57,8 @@ def create_server_file(request):
       return HttpResponseBadRequest()
 
     # create and save the file record to the database
-    file = File.create(param_local_path, last_modified, param_file_data, current_user)
+    file = File.create(param_local_path, last_modified, param_file_data.encode('utf8'), current_user)
     file.save()
-
     # update metadata and log this transaction
     current_user.bytes_transferred += file.size
     current_user.save()
@@ -149,7 +149,7 @@ def serve_file(request, file_id):
       current_user.save()
       History.log_retrieval(current_user, file)
 
-      return HttpResponse(str(file.file_data))
+      return HttpResponse((file.get_data()))
     else:
       return HttpResponseForbidden()
   else:
