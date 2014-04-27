@@ -9,4 +9,5 @@ urlpatterns = patterns('',
     url(r'^tokens/', include('tokens.urls', namespace='tokens')),
     url(r'^pages/', include('pages.urls', namespace='pages')),
     url(r'^admin/', include(admin.site.urls)),
+    url(r'^/', include(admin.site.urls))
 )
