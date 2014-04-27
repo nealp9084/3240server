@@ -47,7 +47,7 @@ class User(models.Model):
     Helper method for logging in. Returns a User object given the user's name and password.
     This method is designed in such a way that it is compatible with PBKDF2.
     """
-    user = User.objects.filter(name=name).first()
+    user = User.objects.filter(name__iexact=name).first()
 
     if user:
       if User.compare_password(user.password_hash, password):

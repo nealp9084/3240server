@@ -64,7 +64,7 @@ def create(request):
     param_password = request.POST['password']
 
     # check if a user exists with the given username
-    if User.objects.filter(name=param_name):
+    if User.objects.filter(name__iexact=param_name):
       error_data = {'code': 100, 'message': 'username is taken'}
       json_data = json.dumps({'success': False, 'error': error_data})
       return HttpResponse(json_data)
