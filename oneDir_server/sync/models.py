@@ -1,7 +1,6 @@
 from django.db import models
 from django.utils import timezone
 from copy import deepcopy
-import base64
 
 from users.models import User
 
@@ -24,7 +23,7 @@ class File(models.Model):
     """Factory method for creating a file with sane default values."""
     return File(local_path=local_path,
                 last_modified=last_modified,
-                file_data=base64.encodestring(file_data),
+                file_data=file_data,
                 owner=owner,
                 size=len(file_data))
 
@@ -40,9 +39,6 @@ class File(models.Model):
     result['owner_id'] = deepcopy(self.owner_id)
     result['size'] = deepcopy(self.size)
     return result
-
-  def get_data(self):
-    return base64.decodestring(self.file_data)
 
   def is_sync_needed(self, user_timestamp):
     """
