@@ -203,12 +203,26 @@ def show_history(request):
     if not current_user:
       return HttpResponseForbidden()
 
-    if current_user.is_admin:
-      objs = [x.to_dict() for x in list(History.objects.all())]
-    else:
-      objs = [x.to_dict() for x in list(History.objects.all().filter(who=current_user))]
-
+    objs = [x.to_dict() for x in list(History.objects.all().filter(who=current_user))]
     json_data = json.dumps(objs)
     return HttpResponse(json_data)
+  else:
+    return HttpResponseNotAllowed(['GET'])
+
+def admin_show_history(request):
+  if request.method == 'GET':
+    param_secret = request.GET['token']
+
+    # get the current user via the access token
+    current_user = Token.get_current_user(param_secret)
+    if not current_user:
+      return HttpResponseForbidden()
+
+    if current_user.is_admin:
+      objs = [x.to_dict() for x in list(History.objects.all())]
+      json_data = json.dumps(objs)
+      return HttpResponse(json_data)
+    else:
+      return HttpResponseForbidden()
   else:
     return HttpResponseNotAllowed(['GET'])

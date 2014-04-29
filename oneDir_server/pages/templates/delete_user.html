@@ -10,19 +10,23 @@
 
         $(document).ready(function() {
             $('#login_btn').click(function() {
-                data = { name: $('#login_un').val(), password: $('#login_pw').val() };
+                var data = { name: $('#login_un').val(), password: $('#login_pw').val() };
                 $.post('/tokens/login/', data, function(json_response) {
-                    response = JSON.parse(json_response);
+                    var response = JSON.parse(json_response);
                     window.token = response.token;
                     $('#btn').attr('disabled', false);
                 });
             });
             $('#btn').click(function() {
-                var uid = $('#id').val();
-                var url = '/users/' + uid + '/delete/?token=' + window.token;
                 $('#msg').text('');
-                jQueryDelete(url, function() {
-                    $('#msg').text('Deleted the account!');
+                $.get('/users/me/?token=' + window.token, function(json_response) {
+                    var response = JSON.parse(json_response);
+                    var uid = response.id;
+                    var url = '/users/' + uid + '/delete/?token=' + window.token;
+
+                    jQueryDelete(url, function() {
+                        $('#msg').text('Deleted the account!');
+                    });
                 });
             });
         });
@@ -37,8 +41,7 @@
     </div>
     <!-- thing for actually deleting the account -->
     <div>
-        <input type="text" id="id" placeholder="user id"/>
-        <input type="submit" id="btn" value="Delete account!" disabled />
+        <input type="submit" id="btn" value="Delete my account!" disabled />
     </div>
     <div id="msg"></div>
 </body>

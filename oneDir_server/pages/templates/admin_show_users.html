@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin - Show users</title>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#login_btn').click(function() {
+                var data = { name: $('#login_un').val(), password: $('#login_pw').val() };
+                $.post('/tokens/login/', data, function(json_response_1) {
+                    var response_1 = JSON.parse(json_response_1);
+                    var token = response_1.token;
+                    $.get('/users/me/?token=' + token, function(json_response_2) {
+                        var response_2 = JSON.parse(json_response_2);
+                        if (response_2.is_admin) {
+                            window.token = token;
+                            $('#btn').attr('disabled', false);
+                        } else {
+                            alert('You are not an admin! You should not use this page.');
+                        }
+                    });
+                });
+            });
+            $('#btn').click(function() {
+                $('#tbd')[0].innerHTML = '';
+                $('#msg').text('');
+                $.get('/users/?token=' + window.token, function(json_response) {
+                    var users = JSON.parse(json_response);
+                    var total_bytes_transferred = 0;
+                    for (var i = 0; i < users.length; i++) {
+                        var user = users[i];
+                        total_bytes_transferred += user.bytes_transferred;
+                        var row = '<tr>' +
+                                '<td>' + user.id + '</td>' +
+                                '<td>' + user.name + '</td>' +
+                                '<td>' + user.is_admin + '</td>' +
+                                '<td>' + user.bytes_transferred + '</td>' +
+                                '<td>' + user.last_activity + '</td>' +
+                                '</tr>';
+                        $('#tbd')[0].innerHTML += row;
+                    }
+                    $('#msg').text('Total bytes transferred: ' + total_bytes_transferred);
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+    <!-- login thing for grabbing the token -->
+    <div>
+        <input type="text" id="login_un" placeholder="username" />
+        <input type="password" id="login_pw" placeholder="password" />
+        <input type="submit" id="login_btn" value="Login first" />
+    </div>
+    <!-- thing for actually changing the password -->
+    <div>
+        <input type="submit" id="btn" value="Show users!" disabled />
+    </div>
+    <table id="tbl" border="1">
+        <thead>
+            <tr>
+                <td>User Id</td>
+                <td>Name</td>
+                <td>Is Admin?</td>
+                <td>Bytes Transferred</td>
+                <td>Last activity</td>
+            </tr>
+        </thead>
+        <tbody id="tbd">
+        </tbody>
+    </table>
+    <div id="msg"></div>
+</body>
+</html>

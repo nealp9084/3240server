@@ -1,25 +1,34 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Show my transaction history</title>
+    <title>Admin - Show everyone's transaction history</title>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
     <script>
         $(document).ready(function() {
             $('#login_btn').click(function() {
-                data = { name: $('#login_un').val(), password: $('#login_pw').val() };
-                $.post('/tokens/login/', data, function(json_response) {
-                    var response = JSON.parse(json_response);
-                    window.token = response.token;
-                    $('#btn').attr('disabled', false);
+                var data = { name: $('#login_un').val(), password: $('#login_pw').val() };
+                $.post('/tokens/login/', data, function(json_response_1) {
+                    var response_1 = JSON.parse(json_response_1);
+                    var token = response_1.token;
+                    $.get('/users/me/?token=' + token, function(json_response_2) {
+                        var response_2 = JSON.parse(json_response_2);
+                        if (response_2.is_admin) {
+                            window.token = token;
+                            $('#btn').attr('disabled', false);
+                        } else {
+                            alert('You are not an admin! You should not use this page.');
+                        }
+                    });
                 });
             });
             $('#btn').click(function() {
                 $('#tbd')[0].innerHTML = '';
-                $.get('/sync/show_history/?token=' + window.token, function(data) {
+                $.get('/sync/admin_show_history/?token=' + window.token, function(data) {
                     var items = JSON.parse(data);
                     for (var i = 0; i < items.length; i++) {
                         var item = items[i];
                         var row = '<tr>' +
+                                '<td>' + item.who_id + '</td>' +
                                 '<td>' + item.what_id + '</td>' +
                                 '<td>' + item.when + '</td>' +
                                 '<td>' + item.type + '</td>' +
@@ -39,11 +48,12 @@
         <input type="submit" id="login_btn" value="Login first"/>
     </div>
     <div>
-        <input type="submit" id="btn" value="Show my history!" disabled />
+        <input type="submit" id="btn" value="Show history!" disabled />
     </div>
     <table id="tbl" border="1">
         <thead>
             <tr>
+                <td>User Id</td>
                 <td>File Id</td>
                 <td>Timestamp</td>
                 <td>Transaction Type</td>

@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Show my transaction history</title>
+    <title>Show my files</title>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
     <script>
         $(document).ready(function() {
             $('#login_btn').click(function() {
-                data = { name: $('#login_un').val(), password: $('#login_pw').val() };
+                var data = { name: $('#login_un').val(), password: $('#login_pw').val() };
                 $.post('/tokens/login/', data, function(json_response) {
                     var response = JSON.parse(json_response);
                     window.token = response.token;
@@ -15,17 +15,23 @@
             });
             $('#btn').click(function() {
                 $('#tbd')[0].innerHTML = '';
-                $.get('/sync/show_history/?token=' + window.token, function(data) {
+                $('#msg').text('');
+                $.get('/sync/?token=' + window.token, function(data) {
                     var items = JSON.parse(data);
+                    var total_space_used = 0;
                     for (var i = 0; i < items.length; i++) {
                         var item = items[i];
+                        total_space_used += item.size;
                         var row = '<tr>' +
-                                '<td>' + item.what_id + '</td>' +
-                                '<td>' + item.when + '</td>' +
-                                '<td>' + item.type + '</td>' +
+                                '<td>' + item.id + '</td>' +
+                                '<td>' + item.owner_id + '</td>' +
+                                '<td>' + item.local_path + '</td>' +
+                                '<td>' + item.size + '</td>' +
+                                '<td>' + item.last_modified + '</td>' +
                                 '</tr>';
                         $('#tbd')[0].innerHTML += row;
                     }
+                    $('#msg').text('Total space used: ' + total_space_used);
                 });
             });
         });
@@ -39,18 +45,21 @@
         <input type="submit" id="login_btn" value="Login first"/>
     </div>
     <div>
-        <input type="submit" id="btn" value="Show my history!" disabled />
+        <input type="submit" id="btn" value="Show my files!" disabled />
     </div>
     <table id="tbl" border="1">
         <thead>
             <tr>
                 <td>File Id</td>
-                <td>Timestamp</td>
-                <td>Transaction Type</td>
+                <td>Owner Id</td>
+                <td>Local Path</td>
+                <td>Size</td>
+                <td>Last Modified</td>
             </tr>
         </thead>
         <tbody id="tbd">
         </tbody>
     </table>
+    <div id="msg"></div>
 </body>
 </html>

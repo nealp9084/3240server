@@ -6,8 +6,8 @@
     <script>
         $(document).ready(function() {
             $('#btn').click(function() {
-                data = {name: $('#nm').val(), password: $('#pw').val() };
                 $('#msg').text('');
+                var data = { name: $('#nm').val(), password: $('#pw').val() };
                 $.post('/users/create/', data, function() {
                    $('#msg').text('Created the user!');
                 });
@@ -19,7 +19,7 @@
     <div>
         <input type="text" id="nm" placeholder="name" />
         <input type="password" id="pw" placeholder="password" />
-        <input type="submit" id="btn" value="Create user!" />
+        <input type="submit" id="btn" value="Create my account!" />
     </div>
     <div id="msg"></div>
 </body>
